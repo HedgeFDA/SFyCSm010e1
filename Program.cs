@@ -16,12 +16,9 @@ class Program
     /// <summary>
     /// Функция реализующая запрос ввода у пользоватеся строкового значения
     /// </summary>
-    /// <param name="message">Текст запроса ввода строки к пользователю</param>
     /// <returns>Введеное значение</returns>
-    static string InputStringValue(string message)
+    static string InputStringValue()
     {
-        Console.Write(message);
-
         return Console.ReadLine() ?? string.Empty;
     }
 
@@ -36,7 +33,10 @@ class Program
         // Создаем экземпляр калькулятора
         Calculator сalculator = new Calculator();
 
-        Console.WriteLine("Калькуляртор запущен.\nДля завершения работы калькулятора введите пустое значение.");
+        // Создаем экземпляр логегра
+        Logger logger = new Logger();
+
+        logger.Event("Калькуляртор запущен.\nДля завершения работы калькулятора введите пустое значение.");
 
         string currentOperation = "+";
         bool calculating        = true;
@@ -52,14 +52,16 @@ class Program
 
             while (string.IsNullOrEmpty(currentOperation))
             {
-                valueString = InputStringValue("Введите знак: ");
+                logger.Question("Введите знак: ");
+                
+                valueString = InputStringValue();
 
                 if (string.IsNullOrEmpty(valueString))
                     calculating = false;
                 else if (valueString == "+" || valueString == "-" || valueString == "*" || valueString == "/")
                     currentOperation = valueString;
                 else
-                    Console.WriteLine("Введено некорректное значение операции: {0}, допустимые значения: +, -, *, /", valueString);
+                    logger.Error($"Введено некорректное значение операции: {valueString}, допустимые значения: +, -, *, /");
 
                 if (!calculating)
                     break;
@@ -77,29 +79,32 @@ class Program
 
             while (string.IsNullOrEmpty(valueString))
             {
-                valueString = InputStringValue("Введите число: ");
+                logger.Question("Введите число: ");
+
+                valueString = InputStringValue();
 
                 if (string.IsNullOrEmpty(valueString))
+                {
                     calculating = false;
-                else try
-                {
-                    valueDouble = Convert.ToDouble(valueString);
-                }
-                catch (FormatException)
-                {
-                    Console.WriteLine("Введено нечисловое значение: {0}", valueString);
 
-                    valueString = string.Empty;
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine("Ошибка: {0}", ex.Message);
-
-                    valueString = string.Empty;
-                }
-
-                if (!calculating)
                     break;
+                }
+                else try
+                    {
+                        valueDouble = Convert.ToDouble(valueString);
+
+                        break;
+                    }
+                    catch (FormatException)
+                    {
+                        logger.Error($"Введено нечисловое значение: {valueString}");
+                    }
+                    catch (Exception ex)
+                    {
+                        logger.Error($"Ошибка: {ex.Message}");
+                    }
+
+                valueString = string.Empty;
             }
 
             if (!calculating)
@@ -120,7 +125,7 @@ class Program
             if (firstInput)
                 firstInput = false;
             else
-                Console.WriteLine("Результат: {0}", result);
+                logger.Event($"Результат: {result}");
         }
 
     }
